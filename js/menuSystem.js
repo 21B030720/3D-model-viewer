@@ -197,7 +197,28 @@ class MenuSystem {
             const selected = intersects[0].object;
             const item = selected.userData.item;
             
-            if (item.options) {
+            if (item.level === 2 && item.model) {
+                // Switch back to model viewer and load the model
+                const modelViewer = document.getElementById('scene-container');
+                const menuContainer = document.getElementById('menu-container');
+                
+                modelViewer.classList.remove('hidden');
+                menuContainer.classList.add('hidden');
+                
+                // Get the model viewer instance and load the model
+                const modelViewerInstance = window.modelViewer;  // We'll need to make this accessible
+                if (modelViewerInstance) {
+                    fetch(item.model)
+                        .then(response => response.blob())
+                        .then(blob => {
+                            const file = new File([blob], 'model.glb');
+                            modelViewerInstance.loadModel(file);
+                        })
+                        .catch(error => {
+                            console.error('Error loading model:', error);
+                        });
+                }
+            } else if (item.options) {
                 this.currentPath.push(item.name);
                 this.displayCurrentLevel();
             }

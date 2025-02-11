@@ -16,7 +16,7 @@
               "name": "Sports Car",
               "level": 2,
               "color": "#FFCCCC",
-              "model": "3d-models/sports-car.glb"
+              "model": "3d-models/sport_car.glb"
             },
             {
               "name": "SUV",

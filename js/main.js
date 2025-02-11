@@ -2,6 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('scene-container');
     const menuContainer = document.getElementById('menu-container');
     const modelViewer = new ModelViewer(container);
+    // Make modelViewer accessible globally
+    window.modelViewer = modelViewer;
     let menuSystem = null;
 
     //
