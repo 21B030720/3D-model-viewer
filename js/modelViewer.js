@@ -68,13 +68,24 @@ class ModelViewer extends EventTarget {
                 this.currentModel.scale.setScalar(scale);
                 this.currentModel.position.sub(center.multiplyScalar(scale));
 
-                // Setup animations
-                if (gltf.animations.length > 0) {
+                // Reset animation state
+                this.mixer = null;
+                this.animations = [];
+                const animationControls = document.getElementById('animationControls');
+                
+                // Setup animations if they exist, otherwise hide controls
+                if (gltf.animations && gltf.animations.length > 0) {
                     this.mixer = new THREE.AnimationMixer(this.currentModel);
                     this.animations = gltf.animations;
-                    this.dispatchEvent(new CustomEvent('animationsLoaded', { 
+                    this.dispatchEvent(new CustomEvent('animationsLoaded', {
                         detail: { animations: this.animations }
                     }));
+                    animationControls.classList.remove('hidden');
+                } else {
+                    // Hide animation controls and clear animation list
+                    animationControls.classList.add('hidden');
+                    document.getElementById('animationsList').innerHTML = '';
+                    document.getElementById('loopToggle').checked = false;
                 }
             });
         };
