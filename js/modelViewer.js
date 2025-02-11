@@ -103,26 +103,24 @@ class ModelViewer extends EventTarget {
         const meshes = [];
         this.currentModel.traverse((child) => {
             if (child.isMesh) {
+                if (!child.material.transparent) {
+                    child.material = child.material.clone();
+                    child.material.transparent = true;
+                }
                 meshes.push(child);
-                child.userData.originalOpacity = child.material.opacity || 1;
             }
         });
 
         anime({
             targets: meshes.map(mesh => ({
-                opacity: 0,
+                opacity: mesh.material.opacity || 1,
                 mesh: mesh
             })),
             opacity: 0,
-            duration: 2000,
-            delay: anime.stagger(100),
+            duration: 3000,  // 3 seconds
             easing: 'easeInOutQuad',
             update: (anim) => {
                 meshes.forEach((mesh, index) => {
-                    if (!mesh.material.transparent) {
-                        mesh.material = mesh.material.clone();
-                        mesh.material.transparent = true;
-                    }
                     mesh.material.opacity = anim.animations[index].currentValue;
                 });
             }
