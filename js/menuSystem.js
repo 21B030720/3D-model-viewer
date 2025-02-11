@@ -14,18 +14,48 @@ class MenuSystem {
         this.loader = new THREE.GLTFLoader();
         
         this.init();
-        this.loadMenuData();
+        this.loadMenuData().catch(error => {
+            console.error('Error loading menu:', error);
+        });
     }
 
     async loadMenuData() {
         try {
             console.log('Loading menu data...');
             const response = await fetch('data/menu.json');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             this.menuData = await response.json();
             console.log('Menu data loaded:', this.menuData);
+            
+            // Verify model paths
+            const verifyModelPaths = (items) => {
+                items.forEach(item => {
+                    if (item.model) {
+                        console.log('Found model path:', item.model);
+                        // Optionally verify file exists
+                        fetch(item.model)
+                            .then(response => {
+                                if (!response.ok) {
+                                    console.warn(`Model file not found: ${item.model}`);
+                                }
+                            })
+                            .catch(error => {
+                                console.warn(`Error checking model file ${item.model}:`, error);
+                            });
+                    }
+                    if (item.options) {
+                        verifyModelPaths(item.options);
+                    }
+                });
+            };
+            
+            verifyModelPaths(this.menuData.menu_options);
             this.displayCurrentLevel();
         } catch (error) {
             console.error('Error loading menu data:', error);
+            throw error;
         }
     }
 

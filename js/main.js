@@ -14,7 +14,13 @@ document.addEventListener('DOMContentLoaded', () => {
     fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
-            modelViewer.loadModel(file);
+            console.log('File selected:', file);
+            if (file.name.toLowerCase().endsWith('.glb')) {
+                modelViewer.loadModel(file);
+            } else {
+                console.error('Please select a GLB file');
+                alert('Please select a GLB file');
+            }
         }
     });
 

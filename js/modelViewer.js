@@ -2,13 +2,19 @@ class ModelViewer extends EventTarget {
     constructor(container) {
         super();
         this.container = container;
+        this.world = new World();
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.controls = null;
-        this.currentModel = null;
-        this.mixer = null;
-        this.animations = [];
+        this.currentEntity = null;
+        
+        // Add systems
+        this.world.addSystem(new AnimationSystem());
+        this.world.addSystem(new DisappearSystem());
+        
+        // Set background color
+        this.scene.background = new THREE.Color(0x333333);
         
         this.init();
     }
