@@ -1,0 +1,168 @@
+{
+  "menu_options": [
+    {
+      "name": "Vehicles",
+      "level": 0,
+      "color": "#FF4444",
+      "options": [
+        {
+          "name": "Cars",
+          "level": 1,
+          "color": "#FF8888",
+          "options": [
+            {
+              "name": "Sports Car",
+              "level": 2,
+              "color": "#FFCCCC"
+            },
+            {
+              "name": "SUV",
+              "level": 2,
+              "color": "#FFE4E4"
+            }
+          ]
+        },
+        {
+          "name": "Aircraft",
+          "level": 1,
+          "color": "#FF9999",
+          "options": [
+            {
+              "name": "Helicopter",
+              "level": 2,
+              "color": "#FFDDDD"
+            },
+            {
+              "name": "Jet",
+              "level": 2,
+              "color": "#FFF0F0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Characters",
+      "level": 0,
+      "color": "#44FF44",
+      "options": [
+        {
+          "name": "Heroes",
+          "level": 1,
+          "color": "#88FF88",
+          "options": [
+            {
+              "name": "Warrior",
+              "level": 2,
+              "color": "#CCFFCC"
+            },
+            {
+              "name": "Mage",
+              "level": 2,
+              "color": "#E4FFE4"
+            }
+          ]
+        },
+        {
+          "name": "Villains",
+          "level": 1,
+          "color": "#99FF99",
+          "options": [
+            {
+              "name": "Dragon",
+              "level": 2,
+              "color": "#DDFFDD"
+            },
+            {
+              "name": "Dark Knight",
+              "level": 2,
+              "color": "#F0FFF0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Furniture",
+      "level": 0,
+      "color": "#4444FF",
+      "options": [
+        {
+          "name": "Seating",
+          "level": 1,
+          "color": "#8888FF",
+          "options": [
+            {
+              "name": "Chair",
+              "level": 2,
+              "color": "#CCCCFF"
+            },
+            {
+              "name": "Sofa",
+              "level": 2,
+              "color": "#E4E4FF"
+            }
+          ]
+        },
+        {
+          "name": "Storage",
+          "level": 1,
+          "color": "#9999FF",
+          "options": [
+            {
+              "name": "Cabinet",
+              "level": 2,
+              "color": "#DDDDFF"
+            },
+            {
+              "name": "Shelf",
+              "level": 2,
+              "color": "#F0F0FF"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Electronics",
+      "level": 0,
+      "color": "#FF44FF",
+      "options": [
+        {
+          "name": "Gadgets",
+          "level": 1,
+          "color": "#FF88FF",
+          "options": [
+            {
+              "name": "Smartphone",
+              "level": 2,
+              "color": "#FFCCFF"
+            },
+            {
+              "name": "Tablet",
+              "level": 2,
+              "color": "#FFE4FF"
+            }
+          ]
+        },
+        {
+          "name": "Appliances",
+          "level": 1,
+          "color": "#FF99FF",
+          "options": [
+            {
+              "name": "TV",
+              "level": 2,
+              "color": "#FFDDFF"
+            },
+            {
+              "name": "Refrigerator",
+              "level": 2,
+              "color": "#FFF0FF"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

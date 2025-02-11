@@ -90,7 +90,7 @@
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 .loop-toggle {
@@ -99,3 +99,39 @@
     gap: 10px;
     cursor: pointer;
 } 
+
+.back-button {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 1000;
+    transition: background 0.3s;
+}
+
+.back-button:hover {
+    background: #1976D2;
+}
+
+#path-display {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border-radius: 4px;
+    z-index: 1000;
+    font-family: Arial, sans-serif;
+}
+
+#menu-container {
+    flex: 1;
+    position: relative;
+    background: #111111;
+}

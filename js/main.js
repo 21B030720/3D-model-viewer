@@ -1,7 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('scene-container');
+    const menuContainer = document.getElementById('menu-container');
     const modelViewer = new ModelViewer(container);
-    
+    let menuSystem = null;
+
+    //
+    // Model viewer
+    //
     // File upload handling
     const fileInput = document.getElementById('modelUpload');
     fileInput.addEventListener('change', (e) => {
@@ -11,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Animation controls
+    // Animation controlling
     const animationControls = document.getElementById('animationControls');
     const animationsList = document.getElementById('animationsList');
     const loopToggle = document.getElementById('loopToggle');
@@ -32,12 +37,39 @@ document.addEventListener('DOMContentLoaded', () => {
         animationControls.classList.remove('hidden');
     });
 
-    // Effect buttons
+    // Recoloring effect
     document.getElementById('recolorBtn').addEventListener('click', () => {
         modelViewer.recolorModel();
     });
 
+    // Disappearing effect
     document.getElementById('disappearBtn').addEventListener('click', () => {
         modelViewer.disappearEffect();
+    });
+
+    // 
+    // Menu system
+    //
+    // Open menu
+    document.getElementById('menuBtn').addEventListener('click', () => {
+        if (container.classList.contains('hidden')) {
+            // Switching to model viewer
+            container.classList.remove('hidden');
+            menuContainer.classList.add('hidden');
+        } else {
+            // Switching to menu
+            container.classList.add('hidden');
+            menuContainer.classList.remove('hidden');
+            if (!menuSystem) {
+                menuSystem = new MenuSystem(menuContainer);
+            }
+        }
+    });
+
+    // Export menu
+    document.getElementById('exportMenuBtn').addEventListener('click', () => {
+        if (menuSystem) {
+            menuSystem.exportMenu();
+        }
     });
 }); 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Model Viewer</title>
+    <title>3D Model Viewer & Menu System</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -28,10 +28,13 @@
             <div class="effect-controls">
                 <button id="recolorBtn" class="effect-btn">Recolor Model</button>
                 <button id="disappearBtn" class="effect-btn">Disappear Effect</button>
+                <button id="menuBtn" class="effect-btn">Open Menu</button>
+                <button id="exportMenuBtn" class="effect-btn">Export Menu</button>
             </div>
         </div>
         
         <div id="scene-container"></div>
+        <div id="menu-container" class="hidden"></div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -39,7 +42,7 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <script src="js/modelViewer.js"></script>
-    <script src="js/animationController.js"></script>
+    <script src="js/menuSystem.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html> 
