@@ -163,6 +163,30 @@ class MenuSystem {
             box.position.set(x, y, 0);
             box.userData.item = item;
             
+            // Add delete button
+            const deleteButtonGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+            const deleteButtonMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xff0000,  // Bright red
+                emissive: 0x660000,  // Dark red glow
+                shininess: 30
+            });
+            const deleteButton = new THREE.Mesh(deleteButtonGeometry, deleteButtonMaterial);
+            deleteButton.position.set(1.5, 1.5, 1.5); // Top right corner
+            deleteButton.userData.isDeleteButton = true;
+            box.add(deleteButton);
+
+            // Add copy link button
+            const copyButtonGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+            const copyButtonMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x00ff00,  // Bright green
+                emissive: 0x006600,  // Dark green glow
+                shininess: 30
+            });
+            const copyButton = new THREE.Mesh(copyButtonGeometry, copyButtonMaterial);
+            copyButton.position.set(-1.5, 1.5, 1.5); // Top left corner
+            copyButton.userData.isCopyButton = true;
+            box.add(copyButton);
+            
             // Add wireframe
             const wireframe = new THREE.LineSegments(
                 new THREE.EdgesGeometry(boxGeometry),
@@ -221,22 +245,42 @@ class MenuSystem {
         event.preventDefault();
         
         this.raycaster.setFromCamera(this.mouse, this.camera);
-        const intersects = this.raycaster.intersectObjects(this.scene.children);
+        const intersects = this.raycaster.intersectObjects(this.scene.children, true);
 
         if (intersects.length > 0) {
-            const selected = intersects[0].object;
-            const item = selected.userData.item;
+            const clicked = intersects[0].object;
             
+            // Get the parent box that contains the item data
+            let itemBox = clicked;
+            while (itemBox && !itemBox.userData.item) {
+                itemBox = itemBox.parent;
+            }
+
+            if (!itemBox || !itemBox.userData.item) return;
+            const item = itemBox.userData.item;
+
+            // Handle special buttons first
+            if (clicked.userData.isDeleteButton) {
+                this.deleteMenuItem(item);
+                return;
+            }
+
+            if (clicked.userData.isCopyButton) {
+                this.copyItemLink(item);
+                return;
+            }
+
+            // Handle navigation and model viewing
             if (item.level === 2 && item.model) {
-                // Switch back to model viewer and load the model
+                // Switch to model viewer
                 const modelViewer = document.getElementById('scene-container');
                 const menuContainer = document.getElementById('menu-container');
                 
                 modelViewer.classList.remove('hidden');
                 menuContainer.classList.add('hidden');
                 
-                // Get the model viewer instance and load the model
-                const modelViewerInstance = window.modelViewer;  // We'll need to make this accessible
+                // Load the model
+                const modelViewerInstance = window.modelViewer;
                 if (modelViewerInstance) {
                     fetch(item.model)
                         .then(response => response.blob())
@@ -249,6 +293,7 @@ class MenuSystem {
                         });
                 }
             } else if (item.options) {
+                // Navigate to subcategory
                 this.currentPath.push(item.name);
                 this.displayCurrentLevel();
             }
@@ -324,6 +369,96 @@ class MenuSystem {
         document.body.appendChild(downloadAnchorNode);
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
+    }
+
+    deleteMenuItem(item) {
+        // Find and remove item from menu data
+        let currentLevel = this.menuData.menu_options;
+        for (let i = 0; i < this.currentPath.length; i++) {
+            const found = currentLevel.find(opt => opt.name === this.currentPath[i]);
+            if (found) currentLevel = found.options;
+        }
+        
+        const index = currentLevel.findIndex(opt => opt.name === item.name);
+        if (index !== -1) {
+            currentLevel.splice(index, 1);
+            
+            // Animate deletion
+            anime({
+                targets: this.scene.children.find(child => child.userData.item === item).position,
+                y: [0, 10],
+                opacity: [1, 0],
+                duration: 1000,
+                easing: 'easeOutExpo',
+                complete: () => {
+                    this.displayCurrentLevel();
+                }
+            });
+        }
+    }
+
+    copyItemLink(item) {
+        const path = [...this.currentPath, item.name];
+        const url = new URL(window.location.href);
+        url.searchParams.set('path', path.join('/'));
+        
+        navigator.clipboard.writeText(url.toString())
+            .then(() => {
+                // Show success feedback
+                const feedback = document.createElement('div');
+                feedback.textContent = 'Link copied!';
+                feedback.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: #4CAF50;
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 4px;
+                    z-index: 1000;
+                `;
+                document.body.appendChild(feedback);
+                setTimeout(() => feedback.remove(), 2000);
+            });
+    }
+
+    // Add gallery navigation
+    addGalleryNavigation() {
+        const prevButton = document.createElement('button');
+        prevButton.textContent = '←';
+        prevButton.className = 'gallery-nav prev';
+        prevButton.addEventListener('click', () => this.navigateGallery(-1));
+
+        const nextButton = document.createElement('button');
+        nextButton.textContent = '→';
+        nextButton.className = 'gallery-nav next';
+        nextButton.addEventListener('click', () => this.navigateGallery(1));
+
+        this.container.appendChild(prevButton);
+        this.container.appendChild(nextButton);
+    }
+
+    navigateGallery(direction) {
+        let currentLevel = this.menuData.menu_options;
+        for (const path of this.currentPath) {
+            const found = currentLevel.find(opt => opt.name === path);
+            if (found) currentLevel = found.options;
+        }
+
+        const currentIndex = this.currentItemIndex || 0;
+        this.currentItemIndex = (currentIndex + direction + currentLevel.length) % currentLevel.length;
+
+        // Animate camera to new position
+        const targetPosition = this.getItemPosition(this.currentItemIndex, currentLevel.length);
+        anime({
+            targets: this.camera.position,
+            x: targetPosition.x,
+            y: targetPosition.y,
+            z: targetPosition.z + 5,
+            duration: 1000,
+            easing: 'easeInOutQuad'
+        });
     }
 }
 
