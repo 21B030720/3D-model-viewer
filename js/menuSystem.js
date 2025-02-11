@@ -120,30 +120,35 @@ class MenuSystem {
             const x = (col - (cols - 1) / 2) * spacing;
             const y = (row - (rows - 1) / 2) * spacing;
 
-            // Create container box with improved materials
+            // Create container box
             const boxGeometry = new THREE.BoxGeometry(3, 3, 3);
             const boxMaterial = new THREE.MeshPhongMaterial({ 
                 color: item.color,
                 transparent: true,
-                opacity: 0.6,  // Increased opacity
-                shininess: 100,  // Added shininess
-                specular: 0x666666  // Added specular highlight
+                opacity: 0.2,
+                shininess: 100,
+                side: THREE.DoubleSide
             });
             const box = new THREE.Mesh(boxGeometry, boxMaterial);
             box.position.set(x, y, 0);
             box.userData.item = item;
             
-            // Add wireframe to make edges visible
+            // Add wireframe
             const wireframe = new THREE.LineSegments(
                 new THREE.EdgesGeometry(boxGeometry),
-                new THREE.LineBasicMaterial({ color: 0xffffff })
+                new THREE.LineBasicMaterial({ 
+                    color: item.color,
+                    linewidth: 2,
+                    opacity: 0.8,
+                    transparent: true
+                })
             );
             box.add(wireframe);
             
             this.scene.add(box);
 
-            // Load and add model if specified
             if (item.model) {
+                // Load 3D model if specified
                 this.loader.load(item.model, (gltf) => {
                     const model = gltf.scene;
                     
@@ -170,7 +175,12 @@ class MenuSystem {
                     model.userData.rotationSpeed = 0.01;
                 }, undefined, (error) => {
                     console.error('Error loading model:', error);
+                    // Add text as fallback if model fails to load
+                    createTextLabel(item.name, box);
                 });
+            } else {
+                // Create text label if no model
+                createTextLabel(item.name, box);
             }
         });
 
@@ -204,7 +214,12 @@ class MenuSystem {
 
         this.scene.children.forEach(child => {
             if (child.material && child.material.transparent) {
-                child.material.opacity = 0.6;  // Default opacity
+                child.material.opacity = 0.1;  // Default very transparent
+                child.children.forEach(wireframe => {
+                    if (wireframe.material) {
+                        wireframe.material.opacity = 1;  // Wireframe stays visible
+                    }
+                });
                 child.scale.set(1, 1, 1);
             }
         });
@@ -212,7 +227,12 @@ class MenuSystem {
         if (intersects.length > 0) {
             const selected = intersects[0].object;
             if (selected.material && selected.material.transparent) {
-                selected.material.opacity = 0.8;  // Increased opacity on hover
+                selected.material.opacity = 0.4;  // Slightly more visible on hover
+                selected.children.forEach(wireframe => {
+                    if (wireframe.material) {
+                        wireframe.material.opacity = 1;  // Full opacity for wireframe on hover
+                    }
+                });
                 selected.scale.set(1.1, 1.1, 1.1);
             }
         }
@@ -254,4 +274,57 @@ class MenuSystem {
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
     }
+}
+
+function createTextLabel(text, box) {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = 512;
+    canvas.height = 512;
+    
+    // Set text style
+    context.fillStyle = '#ffffff';
+    context.font = 'bold 60px Arial';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    
+    // Draw text
+    context.fillText(text, canvas.width/2, canvas.height/2);
+    
+    // Create texture
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    
+    // Create material with the text texture
+    const textMaterial = new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        side: THREE.DoubleSide
+    });
+    
+    // Create plane for the text
+    const textGeometry = new THREE.PlaneGeometry(2.8, 2.8);  // Slightly smaller than box
+    
+    // Front face
+    const frontText = new THREE.Mesh(textGeometry, textMaterial);
+    frontText.position.set(0, 0, 1.51);  // Position relative to box center
+    box.add(frontText);
+    
+    // Back face
+    const backText = new THREE.Mesh(textGeometry, textMaterial);
+    backText.position.set(0, 0, -1.51);
+    backText.rotation.y = Math.PI;
+    box.add(backText);
+    
+    // Right face
+    const rightText = new THREE.Mesh(textGeometry, textMaterial);
+    rightText.position.set(1.51, 0, 0);
+    rightText.rotation.y = Math.PI / 2;
+    box.add(rightText);
+    
+    // Left face
+    const leftText = new THREE.Mesh(textGeometry, textMaterial);
+    leftText.position.set(-1.51, 0, 0);
+    leftText.rotation.y = -Math.PI / 2;
+    box.add(leftText);
 }

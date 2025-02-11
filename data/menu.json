@@ -29,6 +29,7 @@
           "name": "Aircraft",
           "level": 1,
           "color": "#FF9999",
+          "model": "3d-models/aircraft.glb",
           "options": [
             {
               "name": "Helicopter",
