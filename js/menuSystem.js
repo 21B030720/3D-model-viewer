@@ -11,6 +11,7 @@ class MenuSystem {
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
         this.selectedObjects = [];
+        this.loader = new THREE.GLTFLoader();
         
         this.init();
         this.loadMenuData();
@@ -31,11 +32,12 @@ class MenuSystem {
     init() {
         // Setup scene
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x111111);
+        this.scene.background = new THREE.Color(0x222222);  // Slightly lighter background
 
         // Setup camera
         this.camera = new THREE.PerspectiveCamera(75, this.container.clientWidth / this.container.clientHeight, 0.1, 1000);
-        this.camera.position.z = 10;
+        this.camera.position.set(0, 5, 15);  // Move camera back and up
+        this.camera.lookAt(0, 0, 0);
 
         // Setup renderer
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -48,10 +50,14 @@ class MenuSystem {
         this.controls.dampingFactor = 0.05;
 
         // Setup lights
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight.position.set(0, 1, 1);
-        this.scene.add(ambientLight, directionalLight);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);  // Increased intensity
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);  // Increased intensity
+        directionalLight.position.set(5, 5, 5);  // Adjusted position
+        
+        const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.5);
+        directionalLight2.position.set(-5, -5, -5);
+        
+        this.scene.add(ambientLight, directionalLight, directionalLight2);
 
         // Event listeners
         window.addEventListener('resize', () => this.onWindowResize());
@@ -88,6 +94,9 @@ class MenuSystem {
         console.log('Displaying current level, path:', this.currentPath);
         // Clear existing objects
         while(this.scene.children.length > 0){ 
+            if (this.scene.children[0].type === 'Light') {
+                break;  // Keep lights
+            }
             this.scene.remove(this.scene.children[0]); 
         }
 
@@ -101,7 +110,7 @@ class MenuSystem {
         }
 
         const items = currentMenu;
-        const spacing = 3;
+        const spacing = 5;  // Increased spacing for models
         const rows = Math.ceil(Math.sqrt(items.length));
         const cols = Math.ceil(items.length / rows);
 
@@ -111,16 +120,58 @@ class MenuSystem {
             const x = (col - (cols - 1) / 2) * spacing;
             const y = (row - (rows - 1) / 2) * spacing;
 
-            const geometry = new THREE.BoxGeometry(2, 2, 2);
-            const material = new THREE.MeshPhongMaterial({ 
+            // Create container box with improved materials
+            const boxGeometry = new THREE.BoxGeometry(3, 3, 3);
+            const boxMaterial = new THREE.MeshPhongMaterial({ 
                 color: item.color,
                 transparent: true,
-                opacity: 0.8
+                opacity: 0.6,  // Increased opacity
+                shininess: 100,  // Added shininess
+                specular: 0x666666  // Added specular highlight
             });
-            const mesh = new THREE.Mesh(geometry, material);
-            mesh.position.set(x, y, 0);
-            mesh.userData.item = item;
-            this.scene.add(mesh);
+            const box = new THREE.Mesh(boxGeometry, boxMaterial);
+            box.position.set(x, y, 0);
+            box.userData.item = item;
+            
+            // Add wireframe to make edges visible
+            const wireframe = new THREE.LineSegments(
+                new THREE.EdgesGeometry(boxGeometry),
+                new THREE.LineBasicMaterial({ color: 0xffffff })
+            );
+            box.add(wireframe);
+            
+            this.scene.add(box);
+
+            // Load and add model if specified
+            if (item.model) {
+                this.loader.load(item.model, (gltf) => {
+                    const model = gltf.scene;
+                    
+                    // Scale and center model
+                    const bbox = new THREE.Box3().setFromObject(model);
+                    const size = bbox.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const scale = 2 / maxDim;  // Fit inside box
+                    model.scale.setScalar(scale);
+
+                    // Center model in box
+                    bbox.setFromObject(model);
+                    const center = bbox.getCenter(new THREE.Vector3());
+                    model.position.sub(center.multiplyScalar(scale));
+                    
+                    // Position model in scene
+                    model.position.add(box.position);
+                    
+                    // Add to scene
+                    this.scene.add(model);
+                    
+                    // Optional: animate model rotation
+                    model.userData.animate = true;
+                    model.userData.rotationSpeed = 0.01;
+                }, undefined, (error) => {
+                    console.error('Error loading model:', error);
+                });
+            }
         });
 
         this.updatePathDisplay();
@@ -152,16 +203,18 @@ class MenuSystem {
         const intersects = this.raycaster.intersectObjects(this.scene.children);
 
         this.scene.children.forEach(child => {
-            if (child.material) {
-                child.material.opacity = 0.8;
+            if (child.material && child.material.transparent) {
+                child.material.opacity = 0.6;  // Default opacity
                 child.scale.set(1, 1, 1);
             }
         });
 
         if (intersects.length > 0) {
             const selected = intersects[0].object;
-            selected.material.opacity = 1;
-            selected.scale.set(1.1, 1.1, 1.1);
+            if (selected.material && selected.material.transparent) {
+                selected.material.opacity = 0.8;  // Increased opacity on hover
+                selected.scale.set(1.1, 1.1, 1.1);
+            }
         }
     }
 
@@ -180,6 +233,14 @@ class MenuSystem {
 
     animate() {
         requestAnimationFrame(() => this.animate());
+        
+        // Rotate models
+        this.scene.traverse((object) => {
+            if (object.userData.animate) {
+                object.rotation.y += object.userData.rotationSpeed;
+            }
+        });
+
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
     }
