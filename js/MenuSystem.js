@@ -14,8 +14,23 @@ class MenuSystem {
         this.loader = new THREE.GLTFLoader();
         
         this.init();
-        this.loadMenuData().catch(error => {
+        this.loadMenuData().then(() => {
+            this.handleUrlPath();
+        }).catch(error => {
             console.error('Error loading menu:', error);
+        });
+        
+        // Listen for URL changes and browser back/forward
+        window.addEventListener('popstate', (event) => {
+            if (this.menuData) {
+                // Get current URL path
+                const params = new URLSearchParams(window.location.search);
+                const pathString = params.get('path');
+                
+                // Reset path and navigate
+                this.currentPath = pathString ? pathString.split('/') : [];
+                this.displayCurrentLevel();
+            }
         });
     }
 
@@ -297,6 +312,17 @@ class MenuSystem {
                 this.currentPath.push(item.name);
                 this.displayCurrentLevel();
             }
+
+            // Update URL when navigating
+            if (item.options || (item.level === 2 && item.model)) {
+                const path = [...this.currentPath];
+                if (item.options) {
+                    path.push(item.name);
+                }
+                const url = new URL(window.location.href);
+                url.searchParams.set('path', path.join('/'));
+                window.history.pushState({}, '', url.toString());
+            }
         }
     }
 
@@ -337,6 +363,16 @@ class MenuSystem {
     goBack() {
         if (this.currentPath.length > 0) {
             this.currentPath.pop();
+            
+            // Update URL to reflect new path
+            const url = new URL(window.location.href);
+            if (this.currentPath.length > 0) {
+                url.searchParams.set('path', this.currentPath.join('/'));
+            } else {
+                url.searchParams.delete('path'); // Remove path parameter if we're at root
+            }
+            window.history.pushState({}, '', url.toString());
+            
             this.displayCurrentLevel();
         }
     }
@@ -402,6 +438,9 @@ class MenuSystem {
         const url = new URL(window.location.href);
         url.searchParams.set('path', path.join('/'));
         
+        // Update browser URL without reloading
+        window.history.pushState({}, '', url.toString());
+        
         navigator.clipboard.writeText(url.toString())
             .then(() => {
                 // Show success feedback
@@ -459,6 +498,71 @@ class MenuSystem {
             duration: 1000,
             easing: 'easeInOutQuad'
         });
+    }
+
+    async handleUrlPath() {
+        if (!this.menuData) {
+            console.warn('Menu data not loaded yet');
+            return;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const pathString = params.get('path');
+        
+        if (pathString) {
+            const pathArray = pathString.split('/');
+            await this.navigateToPath(pathArray);
+        }
+    }
+
+    async navigateToPath(pathArray) {
+        // Reset to root
+        this.currentPath = [];
+        let currentLevel = this.menuData.menu_options;
+        
+        // Try to follow the path
+        for (const segment of pathArray) {
+            const found = currentLevel.find(item => item.name === segment);
+            if (found) {
+                this.currentPath.push(segment);
+                if (found.options) {
+                    currentLevel = found.options;
+                } else if (found.model) {
+                    // If it's a model, load it
+                    await this.loadModelFromItem(found);
+                    break;
+                }
+            } else {
+                console.warn(`Path segment "${segment}" not found`);
+                break;
+            }
+        }
+        
+        this.displayCurrentLevel();
+    }
+
+    async loadModelFromItem(item) {
+        if (!item.model) return;
+        
+        // Switch to model viewer
+        const modelViewer = document.getElementById('scene-container');
+        const menuContainer = document.getElementById('menu-container');
+        
+        modelViewer.classList.remove('hidden');
+        menuContainer.classList.add('hidden');
+        
+        // Load the model
+        const modelViewerInstance = window.modelViewer;
+        if (modelViewerInstance) {
+            try {
+                const response = await fetch(item.model);
+                const blob = await response.blob();
+                const file = new File([blob], 'model.glb');
+                modelViewerInstance.loadModel(file);
+            } catch (error) {
+                console.error('Error loading model:', error);
+            }
+        }
     }
 }
 
